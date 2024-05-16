@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "235099134968",
+    "project_id": "muslim-9d4ea",
+    "storage_bucket": "muslim-9d4ea.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:235099134968:android:fed6d67c46c82f7605140d",
+        "android_client_info": {
+          "package_name": "com.sasat.muslim"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHG3YA-ty2rP4T5pr0nXncRXatoxqplyk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
