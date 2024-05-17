@@ -159,9 +159,12 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final String backgroundImage = DateTime.now().hour >= 17
+    final Brightness brightness = MediaQuery.of(context).platformBrightness;
+    final bool isDarkMode = brightness == Brightness.dark;
+    final String backgroundImage = isDarkMode
         ? "assets/images/background.png"
         : "assets/images/background1.png";
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -196,7 +199,7 @@ class _HomePageState extends State<HomePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 50),
+            padding: const EdgeInsets.only(left: 35),
             child: FloatingActionButton(
               heroTag: _calendarButtonTag,
               onPressed: () {
@@ -207,7 +210,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 );
               },
-              child: const Icon(Icons.calendar_today),
+              child: const Icon(Icons.schedule_outlined),
             ),
           ),
           SizedBox(height: 10),
