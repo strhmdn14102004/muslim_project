@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:muslim/helper/app_colors.dart';
@@ -18,11 +20,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final String _calendarButtonTag = 'calendar_button_tag';
+  final String _LogoutButtonTag = 'logout_button_tag';
+  late FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
   String? _userEmail;
+
   @override
   void initState() {
     super.initState();
     _getUserEmail();
+    _initializeNotifications();
     _requestNotificationPermission();
     _loadPrayerTimes();
   }
@@ -40,6 +47,48 @@ class _HomePageState extends State<HomePage> {
     context.read<HomeBloc>().add(LoadPrayerTimes());
   }
 
+  Future<void> _initializeNotifications() async {
+    final AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('app_icon');
+    final DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings(
+            requestAlertPermission: false,
+            requestBadgePermission: false,
+            requestSoundPermission: false,
+            onDidReceiveLocalNotification: (int? id, String? title,
+                String? body, String? payload) async {});
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+            android: initializationSettingsAndroid,
+            iOS: initializationSettingsIOS);
+    _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<void> _showNotification() async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'your channel id',
+      'your channel name',
+      importance: Importance.max,
+      priority: Priority.high,
+      icon: 'app_icon',
+    );
+    const DarwinNotificationDetails iOSPlatformChannelSpecifics =
+        DarwinNotificationDetails();
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
+    await _flutterLocalNotificationsPlugin.show(
+      0,
+      'Ayo sholat',
+      'Sholat Sekarang, jangan ditunda tunda\nmau jodoh mu allah tunda juga???~sasat',
+      platformChannelSpecifics,
+      payload: 'Test Payload',
+    );
+  }
+
   void _schedulePrayerNotifications(Map<String, dynamic> prayerTimes) {
     final List<Map<String, String>> times = [
       {"name": "Imsak", "time": prayerTimes['data']['jadwal']['imsak']},
@@ -52,75 +101,8 @@ class _HomePageState extends State<HomePage> {
       {"name": "Isya", "time": prayerTimes['data']['jadwal']['isya']},
     ];
 
-    for (var time in times) {
-      // _schedulePrayerNotification(time['name']!, time['time']!);
-    }
+    for (var time in times) {}
   }
-
-// void _schedulePrayerNotification(String prayerName, String prayerTime) async {
-//   final androidPlatformChannelSpecifics = AndroidNotificationDetails(
-//     'notif',
-//     '$prayerName Notification',
-//     channelDescription: 'Notification for $prayerName prayer',
-//     icon: 'app_icon', // Ensure this matches the filename without the prefix
-//     sound: RawResourceAndroidNotificationSound('azan'),
-//     importance: Importance.max,
-//     priority: Priority.high,
-//   );
-
-//   final iOSPlatformChannelSpecifics = DarwinNotificationDetails(
-//     sound: 'azan.aiff',
-//   );
-
-//   final platformChannelSpecifics = NotificationDetails(
-//     android: androidPlatformChannelSpecifics,
-//     iOS: iOSPlatformChannelSpecifics,
-//   );
-
-//   // Get the time for the first prayer of the day
-//   final now = tz.TZDateTime.now(tz.local);
-//   final dateFormat = DateFormat("HH:mm");
-//   final prayerDateTime = dateFormat.parse(prayerTime);
-//   var prayerDate = tz.TZDateTime(
-//     tz.local,
-//     now.year,
-//     now.month,
-//     now.day,
-//     prayerDateTime.hour,
-//     prayerDateTime.minute,
-//   );
-
-//   // Check if the prayer time is already past, if so, schedule for the next day
-//   if (prayerDate.isBefore(now)) {
-//     prayerDate = prayerDate.add(Duration(days: 1)); // Update prayerDate
-//   }
-
-//   // Schedule the notification
-//   await flutterLocalNotificationsPlugin.zonedSchedule(
-//     0,
-//     'Sudah waktu $prayerName',
-//     'Sudah waktu $prayerName',
-//     prayerDate,
-//     platformChannelSpecifics,
-//     androidAllowWhileIdle: true,
-//     uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-//     payload: '$prayerName Notification',
-//   );
-
-//   // Log to verify the scheduled time
-//   print('Scheduled $prayerName notification at: $prayerDate');
-
-//   // Schedule a daily repeating notification for the prayer
-//   await flutterLocalNotificationsPlugin.periodicallyShow(
-//     0,
-//     'Sudah waktu $prayerName',
-//     'Sudah waktu $prayerName',
-//     RepeatInterval.daily,
-//     platformChannelSpecifics,
-//     androidAllowWhileIdle: true,
-//     payload: '$prayerName Notification',
-//   );
-// }
 
   void _showLogoutConfirmationDialog(BuildContext context) {
     showDialog(
@@ -149,6 +131,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  String _getGreeting() {
+    var hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Selamat Pagi';
+    } else if (hour < 17) {
+      return 'Selamat Siang';
+    } else if (hour < 20) {
+      return 'Selamat Sore';
+    } else {
+      return 'Selamat Malam';
+    }
+  }
+
   void _logout(BuildContext context) {
     FirebaseAuth.instance.signOut();
     Navigator.pushReplacement(
@@ -168,12 +163,6 @@ class _HomePageState extends State<HomePage> {
         ? "assets/images/background.png"
         : "assets/images/background1.png";
     return Scaffold(
-      //     appBar: AppBar(
-      //        backgroundColor: Colors.transparent,
-      // elevation: 0,
-      //       centerTitle: true,
-      //       title: const Text("Muslim Pro"),
-      //     ),
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -203,11 +192,33 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showLogoutConfirmationDialog(context);
-        },
-        child: const Icon(Icons.door_back_door_outlined),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 50),
+            child: FloatingActionButton(
+              heroTag: _calendarButtonTag,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AllPrayerSchedulesPage(),
+                  ),
+                );
+              },
+              child: const Icon(Icons.calendar_today),
+            ),
+          ),
+          SizedBox(height: 10),
+          FloatingActionButton(
+            heroTag: _LogoutButtonTag,
+            onPressed: () {
+              _showLogoutConfirmationDialog(context);
+            },
+            child: const Icon(Icons.logout),
+          ),
+        ],
       ),
     );
   }
@@ -251,6 +262,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildNextPrayerTime(Map<String, dynamic> prayerTimes) {
     final now = DateTime.now();
     final dateFormat = DateFormat("HH:mm");
+    final greeting = _getGreeting();
 
     final List<Map<String, String>> times = [
       {"name": "Imsak", "time": prayerTimes['data']['jadwal']['imsak']},
@@ -289,22 +301,27 @@ class _HomePageState extends State<HomePage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(left: 10, top: 20),
               child: Align(
                   alignment: Alignment.topLeft,
                   child: Text(
-                    "Selamat Datang",
+                    greeting,
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
                   )),
             ),
             Padding(
               padding: const EdgeInsets.only(right: 10),
-              child: Container(
-                  height: 50,
-                  width: 50,
-                  child: const Image(
-                      image: AssetImage('assets/images/photo_profil.png'))),
+              child: InkWell(
+                onTap: () {
+                  _showNotification();
+                },
+                child: Container(
+                    height: 50,
+                    width: 50,
+                    child: const Image(
+                        image: AssetImage('assets/images/photo_profil.png'))),
+              ),
             )
           ],
         ),
@@ -320,22 +337,22 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: Text(
+              "Jadwal Sholat Selanjutnya",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              textAlign: TextAlign.start,
+            ),
+          ),
+        ),
+        Padding(
           padding: const EdgeInsets.all(16.0),
           child: _smallListItem(
             name: nextPrayer['name']!,
             time: nextPrayer['time']!,
           ),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AllPrayerSchedulesPage(),
-              ),
-            );
-          },
-          child: const Text("Lihat Semua Jadwal"),
         ),
       ],
     );

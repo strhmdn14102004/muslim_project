@@ -14,22 +14,24 @@ import 'package:muslim/module/auth/login/login_page.dart';
 import 'package:muslim/module/home/home_bloc.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
+
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
-
-void main() async {
+void main() async{
   WidgetsFlutterBinding.ensureInitialized();
+  // Konfigurasi setting untuk platform Android
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  tz.initializeTimeZones();
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('app_icon');
+  // Konfigurasi setting untuk platform iOS
   const DarwinInitializationSettings initializationSettingsIOS =
       DarwinInitializationSettings();
+  // Gabungkan kedua setting di atas menjadi satu
   const InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-    iOS: initializationSettingsIOS,
-  );
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+      android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
+  // Inisialisasi plugin dengan setting yang sudah dibuat
+  flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  
   runApp(MyApp());
 }
 
