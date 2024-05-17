@@ -12,12 +12,10 @@ import 'package:muslim/helper/app_colors.dart';
 import 'package:muslim/helper/dimension.dart';
 import 'package:muslim/module/auth/login/login_page.dart';
 import 'package:muslim/module/home/home_bloc.dart';
-import 'package:timezone/data/latest.dart' as tz;
-
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Konfigurasi setting untuk platform Android
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -31,14 +29,16 @@ void main() async{
       android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
   // Inisialisasi plugin dengan setting yang sudah dibuat
   flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  
+
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
+  MyApp({Key? key});
+
   final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
       GlobalKey<ScaffoldMessengerState>();
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setPreferredOrientations([
@@ -82,21 +82,16 @@ class MyApp extends StatelessWidget {
           scaffoldMessengerKey: rootScaffoldMessengerKey,
           title: "Muslim",
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            useMaterial3: true,
-            fontFamily: "Barlow",
+          theme: ThemeData.light().copyWith(
             colorScheme: AppColors.lightColorScheme,
           ),
-          darkTheme: ThemeData(
-            useMaterial3: true,
-            fontFamily: "Barlow",
+          darkTheme: ThemeData.dark().copyWith(
             colorScheme: AppColors.darkColorScheme,
           ),
           themeMode: ThemeMode.system,
           builder: (BuildContext context, Widget? child) {
             return MediaQuery(
-              data: MediaQuery.of(context)
-                  .copyWith(textScaler: const TextScaler.linear(1.0)),
+              data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
               child: child ?? Container(),
             );
           },
